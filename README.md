@@ -105,3 +105,7 @@ Strmiids.lib is needed for IID_ICodecAPI definition. These should be in the Wind
 ## GG btns.fla
 
 This is a Flash 8 Professional file. It can probably be opened by Adobe Animate, Adobe Flash CS3/4/5/6. It contains the art for the buttons used in the dll and app portions of the mod. You don't need this file unless you want to edit the button visuals.
+
+## Changelog
+
+* 30'th December 2023 - fixed a crash when copying inputs that were selected up to down, instead of down to up. (released vesion 1.1)
