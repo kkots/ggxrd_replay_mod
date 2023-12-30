@@ -9,7 +9,9 @@ This mod for Guilty Gear Xrd Rev 2 version 2211 works as of 30'th December 2023.
 Thanks to WorseThanYou for finding the input ring buffer, from which the inputs data is taken, and for finding many other things that are used extensively in all my mods.  
 Thanks to GGXrd Reversal Tool for information about the input data format (https://github.com/Iquis/rev2-wakeup-tool).  
 Thanks to Altimor's GGXrd Hitbox overlay mod for the original hitbox-drawing code (http://www.dustloop.com/forums/index.php?/forums/topic/12495-xrd-pc-hitbox-overlay-mod/).  
-Thanks to OBS studio for an idea of how game video capture could be implemented (https://obsproject.com/).
+Thanks to OBS studio for an idea of how game video capture could be implemented (https://obsproject.com/).  
+Check out the new Xrd Mixipedia project which collects pressure sequences for various characters as text inputs: https://docs.google.com/document/d/1244K9vJcUeOUdN2pHA19zLjv2LrZp1UOwqN_-FDMnxo/edit#heading=h.q9yfad8iqfy1  
+If you encounter anything interesting (especially if you can make a whole set of options to go along with it, such as high instead low, low, grab, etc), make sure to share them there.
 
 ## System requirements
 
@@ -51,6 +53,7 @@ The app window has several sections:
   * The inputs themselves - you can select the inputs using: Mouse click, Shift + Mouse click, Mouse drag, Shift + Mouse drag, (optionally Shift+) Up/Down arrow keys, (optionally Shift+) Page up/down keys, (optionally Shift+) Home/end keys. The selected inputs range can only be contiguous.
   * The left edge of the panel - can be used as a seekbar. By dragging it with your mouse you can seek to the portion of the video that corresponds to that input. This might work odd in recorded online matches affected by rollback.
   * Mouse wheel and scrollbars - used to scroll the panels.
+  * The panels have a right-click menu which allows you to Select all or Copy.
 * Video
   * Clicking the video itself does nothing
   * The seekbar under the video - can be used to navigate the video
@@ -110,3 +113,12 @@ This is a Flash 8 Professional file. It can probably be opened by Adobe Animate,
 
 * 30'th December 2023 - fixed a crash when copying inputs that were selected up to down, instead of down to up. (released vesion 1.1)
 * 30'th December 2023 - now fixed the incorrect behavior of missing the first input when copying a section of inputs that was selected up to down. (released vesion 1.2)
+
+## Missing features:
+* Not auto-saving last let's say 100 matches that you play, so can only start recording manually. Can only record 1 match, you must press the button again to record another match.
+* Doesn't save names of players participating in the match, haven't found that yet.
+* Saves character types (Sol, Ky) into the file but doesn't use that anywhere yet
+* Can't display hitboxes in the app, only in the game, but they're still being saved into the file
+* Can't play the video while recording it or vice versa
+* Can't automatically position yourself and the opponent in training mode just as you were in a given frame of the saved replay - you must position yourself and the dummy manually. Also summons - you need to generate those somehow yourself if they're important in the setup or include in your copied segment the section of the inputs that caused them as well.
+* Known issue: switching fullscreen mode of the game while recording will kill the recorded file and freeze the app. The game will be fine although the dll hook will get stuck it. Launch the app, open settings, check a box, press OK and close the app to unload the dll hook from the game (the dll hook unloads every time you close the app after recording or changing settings with some boxes turned on).
