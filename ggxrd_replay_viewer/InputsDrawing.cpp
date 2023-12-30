@@ -1314,9 +1314,8 @@ void InputsPanel::onCopy() {
 	auto it = replayFileData.replayInputs[thisPanelIndex].begin() + startRow.index;
 	auto endIt = replayFileData.replayInputs[thisPanelIndex].begin() + endRow.index + 1;
 	if (startRow.index > endRow.index) {
-		auto itTemp = it;
-		it = endIt;
-		endIt = itTemp;
+		it = replayFileData.replayInputs[thisPanelIndex].begin() + endRow.index;
+		endIt = replayFileData.replayInputs[thisPanelIndex].begin() + startRow.index + 1;
 	}
 	for (; it != endIt; ++it) {
 		StoredInput& input = *it;

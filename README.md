@@ -109,3 +109,4 @@ This is a Flash 8 Professional file. It can probably be opened by Adobe Animate,
 ## Changelog
 
 * 30'th December 2023 - fixed a crash when copying inputs that were selected up to down, instead of down to up. (released vesion 1.1)
+* 30'th December 2023 - now fixed the incorrect behavior of missing the first input when copying a section of inputs that was selected up to down. (released vesion 1.2)
