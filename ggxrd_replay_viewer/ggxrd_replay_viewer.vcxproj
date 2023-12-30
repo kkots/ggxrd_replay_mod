@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{ba044d68-82f4-4ca9-ad80-6411f8f562e5}</ProjectGuid>
+    <RootNamespace>ggxrdreplayviewer</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>D:\Microsoft DirectX SDK %28June 2010%29\Include;D:\source\repos\libpng-libpng16;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Microsoft DirectX SDK %28June 2010%29\Lib\x64;D:\source\repos\libpng-libpng16\projects\vstudio\x64\Release Library;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>D:\source\repos\libpng-libpng16;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\source\repos\libpng-libpng16\projects\vstudio\Release Library;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>D:\Microsoft DirectX SDK %28June 2010%29\Include;D:\source\repos\libpng-libpng16;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Microsoft DirectX SDK %28June 2010%29\Lib\x86;D:\source\repos\libpng-libpng16\projects\vstudio\Release Library;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>D:\Microsoft DirectX SDK %28June 2010%29\Include;D:\source\repos\libpng-libpng16;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Microsoft DirectX SDK %28June 2010%29\Lib\x64;D:\source\repos\libpng-libpng16\projects\vstudio\x64\Release Library;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Rpcrt4.lib;Strmiids.lib;d3d9.lib;libpng16.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libpng16.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libpng16.lib;zlib.lib;Rpcrt4.lib;Strmiids.lib;d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libpng16.lib;zlib.lib;Rpcrt4.lib;Strmiids.lib;d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="characterTypes.h" />
+    <ClInclude Include="Codec.h" />
+    <ClInclude Include="debugMsg.h" />
+    <ClInclude Include="DecoderInput.h" />
+    <ClInclude Include="DecoderThread.h" />
+    <ClInclude Include="EncoderInput.h" />
+    <ClInclude Include="EncoderInputFrameRef.h" />
+    <ClInclude Include="EncoderOutput.h" />
+    <ClInclude Include="EncoderThread.h" />
+    <ClInclude Include="FileMapping.h" />
+    <ClInclude Include="FileReaderThread.h" />
+    <ClInclude Include="FileWriterInput.h" />
+    <ClInclude Include="FileWriterThread.h" />
+    <ClInclude Include="FrameBatch.h" />
+    <ClInclude Include="FrameBatchLogic.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="gameModes.h" />
+    <ClInclude Include="ggxrd_replay_viewer.h" />
+    <ClInclude Include="EncodedImageSize.h" />
+    <ClInclude Include="EncoderInputFrame.h" />
+    <ClInclude Include="ImageStack.h" />
+    <ClInclude Include="InputIconSize.h" />
+    <ClInclude Include="InputsDrawing.h" />
+    <ClInclude Include="InputsDrawingCommand.h" />
+    <ClInclude Include="Layout.h" />
+    <ClInclude Include="LogicInfo.h" />
+    <ClInclude Include="LogicInfoAllocated.h" />
+    <ClInclude Include="LogicInfoRef.h" />
+    <ClInclude Include="MemoryProvisioner.h" />
+    <ClInclude Include="PixelA.h" />
+    <ClInclude Include="ImageYUVScaler.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="InputRingBuffer.h" />
+    <ClInclude Include="MemoryFunctions.h" />
+    <ClInclude Include="PixelRGB.h" />
+    <ClInclude Include="PngButton.h" />
+    <ClInclude Include="PngButtonManager.h" />
+    <ClInclude Include="PngResource.h" />
+    <ClInclude Include="PresentationInput.h" />
+    <ClInclude Include="PresentationThread.h" />
+    <ClInclude Include="PresentationTimer.h" />
+    <ClInclude Include="ReplayFileData.h" />
+    <ClInclude Include="ReplayFileStructs.h" />
+    <ClInclude Include="ReplayInput.h" />
+    <ClInclude Include="ReplayState.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="SampleWithBuffer.h" />
+    <ClInclude Include="SampleWithBufferRef.h" />
+    <ClInclude Include="StoredInput.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="TexturePacker.h" />
+    <ClInclude Include="WinError.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Codec.cpp" />
+    <ClCompile Include="debugMsg.cpp" />
+    <ClCompile Include="DecoderInput.cpp" />
+    <ClCompile Include="DecoderThread.cpp" />
+    <ClCompile Include="EncoderInput.cpp" />
+    <ClCompile Include="EncoderInputFrame.cpp" />
+    <ClCompile Include="EncoderInputFrameRef.cpp" />
+    <ClCompile Include="EncoderOutput.cpp" />
+    <ClCompile Include="EncoderThread.cpp" />
+    <ClCompile Include="FileMapping.cpp" />
+    <ClCompile Include="FileReaderThread.cpp" />
+    <ClCompile Include="FileWriterInput.cpp" />
+    <ClCompile Include="FileWriterThread.cpp" />
+    <ClCompile Include="ggxrd_replay_viewer.cpp" />
+    <ClCompile Include="ImageYUVScaler.cpp" />
+    <ClCompile Include="InputRingBuffer.cpp" />
+    <ClCompile Include="InputsDrawing.cpp" />
+    <ClCompile Include="InputsDrawingCommand.cpp" />
+    <ClCompile Include="Layout.cpp" />
+    <ClCompile Include="LogicInfoRef.cpp" />
+    <ClCompile Include="MemoryFunctions.cpp" />
+    <ClCompile Include="MemoryProvisioner.cpp" />
+    <ClCompile Include="PngButton.cpp" />
+    <ClCompile Include="PngButtonManager.cpp" />
+    <ClCompile Include="PngResource.cpp" />
+    <ClCompile Include="PresentationInput.cpp" />
+    <ClCompile Include="PresentationThread.cpp" />
+    <ClCompile Include="PresentationTimer.cpp" />
+    <ClCompile Include="ReplayFileData.cpp" />
+    <ClCompile Include="ReplayFileStructs.cpp" />
+    <ClCompile Include="SampleWithBuffer.cpp" />
+    <ClCompile Include="SampleWithBufferRef.cpp" />
+    <ClCompile Include="TexturePacker.cpp" />
+    <ClCompile Include="WinError.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ggxrd_replay_viewer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="ggxrd_replay_viewer.ico" />
+    <Image Include="icons\Dbtn.png" />
+    <Image Include="icons\Down.png" />
+    <Image Include="icons\DownLeft.png" />
+    <Image Include="icons\DownRight.png" />
+    <Image Include="icons\followBtn.png" />
+    <Image Include="icons\followBtnHover.png" />
+    <Image Include="icons\followBtnPressed.png" />
+    <Image Include="icons\followBtnToggled.png" />
+    <Image Include="icons\followBtnToggledHover.png" />
+    <Image Include="icons\Hbtn.png" />
+    <Image Include="icons\inputPointer.png" />
+    <Image Include="icons\Kbtn.png" />
+    <Image Include="icons\Left.png" />
+    <Image Include="icons\pauseBtn.png" />
+    <Image Include="icons\pauseBtnHover.png" />
+    <Image Include="icons\pauseBtnPressed.png" />
+    <Image Include="icons\Pbtn.png" />
+    <Image Include="icons\playBtn.png" />
+    <Image Include="icons\playBtnDisabled.png" />
+    <Image Include="icons\playBtnHover.png" />
+    <Image Include="icons\playBtnPressed.png" />
+    <Image Include="icons\recordBtn.png" />
+    <Image Include="icons\recordBtnHover.png" />
+    <Image Include="icons\recordBtnPressed.png" />
+    <Image Include="icons\Right.png" />
+    <Image Include="icons\Sbtn.png" />
+    <Image Include="icons\SPbtn.png" />
+    <Image Include="icons\stepLeftBtn.png" />
+    <Image Include="icons\stepLeftBtnDisabled.png" />
+    <Image Include="icons\stepLeftBtnHover.png" />
+    <Image Include="icons\stepLeftBtnPressed.png" />
+    <Image Include="icons\stepRightBtn.png" />
+    <Image Include="icons\stepRightBtnDisabled.png" />
+    <Image Include="icons\stepRightBtnHover.png" />
+    <Image Include="icons\stepRightBtnPressed.png" />
+    <Image Include="icons\stopBtn.png" />
+    <Image Include="icons\stopBtnHover.png" />
+    <Image Include="icons\stopBtnPressed.png" />
+    <Image Include="icons\TauntBtn.png" />
+    <Image Include="icons\Up.png" />
+    <Image Include="icons\UpLeft.png" />
+    <Image Include="icons\UpRight.png" />
+    <Image Include="small.ico" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,418 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ggxrd_replay_viewer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinError.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryFunctions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PngResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="debugMsg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PngButton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PngButtonManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileMapping.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputRingBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReplayInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gameModes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReplayState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageYUVScaler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EncodedImageSize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PixelA.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TexturePacker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryProvisioner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameBatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameBatchLogic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EncoderThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EncoderInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EncoderOutput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReplayFileStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReplayFileData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EncoderInputFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EncoderInputFrameRef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileWriterThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogicInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogicInfoRef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogicInfoAllocated.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Codec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileWriterInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SampleWithBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SampleWithBufferRef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StoredInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PresentationTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DecoderThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileReaderThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DecoderInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PresentationInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PresentationThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputsDrawingCommand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputsDrawing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PixelRGB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputIconSize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Layout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageStack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="characterTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ggxrd_replay_viewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WinError.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PngResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debugMsg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PngButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PngButtonManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileMapping.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageYUVScaler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TexturePacker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryProvisioner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EncoderThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EncoderInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EncoderOutput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReplayFileData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EncoderInputFrameRef.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileWriterThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LogicInfoRef.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Codec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EncoderInputFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileWriterInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleWithBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleWithBufferRef.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputRingBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReplayFileStructs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PresentationTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DecoderThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileReaderThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DecoderInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PresentationInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PresentationThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputsDrawingCommand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputsDrawing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Layout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ggxrd_replay_viewer.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="ggxrd_replay_viewer.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Dbtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Down.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\DownLeft.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\DownRight.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Hbtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Kbtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Left.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Pbtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Right.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Sbtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\SPbtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\TauntBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\Up.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\UpLeft.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\UpRight.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\recordBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\recordBtnHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\recordBtnPressed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stopBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stopBtnHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stopBtnPressed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\pauseBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\pauseBtnHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\pauseBtnPressed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\playBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\playBtnHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\playBtnPressed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\playBtnDisabled.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\inputPointer.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\followBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\followBtnHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\followBtnPressed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\followBtnToggled.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\followBtnToggledHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepLeftBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepLeftBtnHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepLeftBtnPressed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepRightBtn.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepRightBtnHover.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepRightBtnPressed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepLeftBtnDisabled.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\stepRightBtnDisabled.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

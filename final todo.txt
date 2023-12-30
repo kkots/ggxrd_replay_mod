@@ -1,0 +1,16 @@
+NOT DONE
+find player names if it's really easy
+send over and record player characters
+
+DONE
+add frame counter
+select file to record into
+Play and step frame-by-frame hotkeys, recording hotkey
+frame-by-frame step
+page up/page down keyboard selection
+mirror inputs
+display boxes in-game on/off
+display inputs in-game on/off
+not display inputs during online match
+since a command row takes its values for framesAfter from the input ring buffer, that can go beyond the last match counter - add a bounds check for that when scrubbing the timeline using the inputs panel
+when copying inputs make sure to not read from the file if it's closed

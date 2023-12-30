@@ -1,0 +1,591 @@
+Use stream-oriented container formats such as FLV or MPEG-TS. QuickTime/MP4 won't do.
+Media Foundation: Start up MFStartup(MF_VERSION). At the end call MFShutdown().
+H.264 Video Codec is a Media Foundation Transform (MFT). MFT has an input stream and an output stream. Streams are specified as stream identifiers in all method calls.
+Create MFT. There are several ways to create an MFT:
+1) Call the MFTEnum function.
+2) Call the MFTEnumEx function.
+
+MFT does not make any calls back to the client.
+
+Call IMFTransform::GetStreamCount to get the initial number of streams.
+Call IMFTransform::GetStreamIDs to get the stream identifiers. If this method
+returns E_NOTIMPL, it means the MFT has a fixed number of streams, and the
+stream identifiers are consecutive starting from zero.
+(Optional.) If the MFT does not have a fixed number of streams, call
+IMFTransform::AddInputStreams (https://learn.microsoft.com/en-us/windows/desktop/api/mftransform/nf-mftransform-imftransform-addinputstreams) to add more input streams, or
+IMFTransform::DeleteInputStream to remove input streams. (You cannot add or
+remove output streams.)
+
+Set formats for streams using Media Types: https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D44-
+using IMFTransform::SetInputType or IMFTransform::SetOutputType. To get the list of possible media types for a stream, call IMFTransform::GetInputAvailableType or IMFTransform::GetOutputAvailableType. Before getting output stream types make sure to set the input stream type to a particular type, as available output types depend on the input type. If IMFTransform::GetInputAvailableType returns MF_E_TRANSFORM_TYPE_NOT_SET, you must set the output type first. If IMFTransform::GetInputAvailableType returns E_NOTIMPL, the MFT does not have a list of preferred input types. (Related to IMFTransform::SetInputType) If any stream returns MF_E_TRANSFORM_TYPE_NOT_SET, just set the output stream type. If IMFTransform::GetOutputAvailableType returns MF_E_TRANSFORM_TYPE_NOT_SET, you must set the input stream type first. (Related to IMFTransform::GetOutputAvailableType) If any stream returns E_NOTIMPL, the MFT does not have a list of preferred output types.
+
+Call IMFTransform::ProcessMessage with the MFT_MESSAGE_NOTIFY_BEGIN_STREAMING message. This message requests the
+MFT to allocate any resources it needs during streaming.
+
+To give input data to the MFT, call IMFTransform::ProcessInput.
+The ProcessInput method takes a pointer to a media sample allocated by the client. The
+media sample contains one or more buffers, and each buffer contains input data for the
+MFT to process. (IMFTransform::GetInputStreamInfo exists.)
+The MFT should restrict the amount of input that it gets by returning
+MF_E_NOTACCEPTING from ProcessInput whenever it has some output to produce.
+
+(Optional.) Call IMFTransform::GetOutputStatus to query whether the MFT can generate an output sample. If the method returns S_OK, check the pdwFlags parameter. If pdwFlags contains the MFT_OUTPUT_STATUS_SAMPLE_READY flag, you can call IMFTransform::ProcessOutput. If pdwFlags is zero, call IMFTransform::ProcessInput some more. If the method returns E_NOTIMPL, you can call IMFTransform::ProcessOutput without checking for IMFTransform::GetOutputStatus.
+
+To pull output data from the MFT, call IMFTransform::ProcessOutput.
+The ProcessOutput method supports two different allocation models: Either the MFT allocates the output buffers, or the client allocates the output buffers. Some MFTs support both allocation models, but it is not required for an MFT to support both. For example, an MFT might require the client to allocate the output buffers. The IMFTransform::GetOutputStreamInfo method returns information about an output stream, including which allocation model the MFT supports. (TODO: Check which model H.264 codec uses.)
+If IMFTransform::ProcessOutput returns MF_E_TRANSFORM_NEED_MORE_INPUT, it means the MFT requires more input data; call IMFTransform::ProcessInput some more.
+If IMFTransform::ProcessOutput returns MF_E_TRANSFORM_STREAM_CHANGE, it means the number of output streams has changed, or the output format has changed. The client might need to query for new stream identifiers or set new media types. For more information, see the documentation for ProcessOutput.
+
+At any given time, the MFT can signal one of the following conditions: The MFT requires more input data. In this state, the MFT cannot produce output until the client calls ProcessInput at least once. OR: The MFT will not accept any more input until the client calls ProcessOutput at least once.
+The simplest approach for the client is simply to alternate calls to ProcessInput and ProcessOutput. A more sophisticated algorithm is described in the topic Basic MFT Processing Model.
+
+When you've reached end of stream, call ProcessMessage with the MFT_MESSAGE_NOTIFY_END_OF_STREAM message. Call ProcessMessage with the MFT_MESSAGE_COMMAND_DRAIN message. Call ProcessOutput to get the remaining output. Repeat this step until the method returns MF_E_TRANSFORM_NEED_MORE_INPUT. This return value signals that all of the output has been drained from the MFT. (Do not treat this as an error condition.)
+
+Several input samples might be needed to produce one output sample, or a single input sample might generate several
+output samples. The optimal behavior for the client is to pull output samples from the MFT until the MFT requires more input.
+
+However, the MFT should be able to handle a different order of method calls by the
+client. For example, the client might simply alternate between calls to ProcessInput and
+ProcessOutput. The MFT should restrict the amount of input that it gets by returning
+MF_E_NOTACCEPTING from ProcessInput whenever it has some output to produce.
+
+Use GetInputCurrentType.
+
+If an MFT processes uncompressed video data, it should use the IMF2DBuffer interface
+to manipulate the sample buffers. To get this interface, query the IMFMediaBuffer
+interface on any input or output buffer. Not using this interface when it is available may
+result in additional buffer copies. To make proper use of this interface, the transform
+should not lock the buffer using the IMFMediaBuffer interface when IMF2DBuffer is
+available.
+
+Flushing an MFT causes the MFT to discard all of its input data. This can cause a break in
+the output stream. A client would typically flush an MFT before seeking to a new point
+in the input stream or switching to a new input stream, when the client does not care
+about losing data.
+To flush an MFT, call IMFTransform::ProcessMessage with the
+MFT_MESSAGE_COMMAND_FLUSH message.
+
+Draining an MFT causes the MFT to produce as much output as it can from whatever
+input data has already been sent. If the MFT cannot produce a complete output sample
+from the available input, it will drop input data. A client would typically drain an MFT
+when it reached the end of the source stream, or immediately before a format change in
+the source stream. To drain an MFT, do the following:
+1) Call ProcessMessage with the MFT_MESSAGE_COMMAND_DRAIN message. This
+message notifies the MFT that it should deliver as much output data as it can from
+the input data that has already been sent.
+2) Call ProcessOutput to get output data, until the method returns
+MF_E_TRANSFORM_NEED_MORE_INPUT.
+
+The input samples might have attributes that must be copied to the corresponding
+output samples.
+1) If the MFT returns VARIANT_TRUE for the MFPKEY_EXATTRIBUTE_SUPPORTED
+property, the MFT (oh) must copy the attributes.
+2) If the MFPKEY_EXATTRIBUTE_SUPPORTED property is either VARIANT_FALSE or is
+not set, the client (oh) must copy the attributes.
+
+A discontinuity is a break in an audio or video stream. Discontinuities can be caused by
+dropped packets on a network connection, corrupt file data, a switch from one source
+stream to another, or a wide range of other causes. Discontinuities are signaled by
+setting the MFSampleExtension_Discontinuity (https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D1706-) attribute on the first sample after the
+discontinuity. It is not possible to signal a discontinuity in the middle of a sample.
+Therefore, any discontinuous data should be sent in separate samples.
+
+For details about how stream changes are handled by an MFT, see Handling Stream
+Changes (https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D111-).
+
+To send an event to an MFT, call IMFTransform::ProcessEvent. If the method returns
+MF_S_TRANSFORM_DO_NOT_PROPAGATE_EVENT, the MFT will return the event to the
+caller on a subsequent call to ProcessOutput. If the method returns any other HRESULT
+value, the MFT will not return the event to the client in ProcessOutput. In that case, the
+client is responsible for propagating the event downstream to the next component in
+the pipeline, if applicable. For more information, see IMFTransform::ProcessOutput.
+
+MFTEnumEx
+This function takes the following information as input:
+1) The category of MFT to enumerate, such as video decoder or audio decoder.
+2) An input or output format to match.
+3) Flags that specify additional search conditions.
+The function returns an array of IMFActivate pointers.
+MFT_REGISTER_TYPE_INFO info = { MFMediaType_Video, MFVideoFormat_WMV3 };
+By default, some types of MFT are excluded from the enumeration, including
+asynchronous MFTs, hardware MFTs, and MFTs with field-of-use restructions. These are
+excluded because they all require special handling of some kind. Use the Flags
+parameter of MFTEnumEx to change the default. For example, to include hardware
+MFTs in the enumeration results, set the MFT_ENUM_FLAG_HARDWARE flag:
+C++
+UINT32 unFlags = MFT_ENUM_FLAG_SYNCMFT |
+	MFT_ENUM_FLAG_LOCALMFT |
+	MFT_ENUM_FLAG_SORTANDFILTER;
+MFTEnumEx(
+MFT_CATEGORY_VIDEO_DECODER,
+unFlags,  // UINT32
+&info, // Input type  // *MFT_REGISTER_TYPE_INFO
+NULL, // Output type
+&ppActivate,  // IMFActivate **
+&count  // UINT32
+);
+ppActivate[0]->ActivateObject(IID_PPV_ARGS(&pDecoder));  // IMFTransform *
+ppActivate[i]->Release();
+CoTaskMemFree(ppActivate);
+// MFT_ENUM_FLAG_HARDWARE to include hardware MFTs
+
+MFT_REGISTER_TYPE_INFO aDecoderInputTypes[] =
+{
+{ MFMediaType_Video, MFVideoFormat_H264 },
+};
+MFT_REGISTER_TYPE_INFO aDecoderOutputTypes[] =
+{
+{ MFMediaType_Video, MFVideoFormat_RGB32 }
+};
+
+
+H.264 Video Decoder
+https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D1219-
+
+H.264 Video Encoder
+https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D1220-
+
+For H.264, the most important format attributes are the H.264 profile, the frame rate, the
+frame size, and the encoded bit rate. The following array contains a list of H.264
+encoding formats.
+struct H264ProfileInfo  // not part of the Media Foundation API.
+{
+	UINT32 profile;
+	MFRatio fps;
+	MFRatio frame_size;
+	UINT32 bitrate;
+};
+H264ProfileInfo h264_profiles[] =
+	{
+		{ eAVEncH264VProfile_Base, { 15, 1 }, { 176, 144 }, 128000 },
+		{ eAVEncH264VProfile_Base, { 15, 1 }, { 352, 288 }, 384000 },
+		{ eAVEncH264VProfile_Base, { 30, 1 }, { 352, 288 }, 384000 },
+		{ eAVEncH264VProfile_Base, { 29970, 1000 }, { 320, 240 }, 528560 },
+		{ eAVEncH264VProfile_Base, { 15, 1 }, { 720, 576 }, 4000000 },
+		{ eAVEncH264VProfile_Main, { 25, 1 }, { 720, 576 }, 10000000 },
+		{ eAVEncH264VProfile_Main, { 30, 1 }, { 352, 288 }, 10000000 },
+	};
+
+H.264 profiles are specified using the eAVEncH264VProfile enumeration. You could also
+specify the H.264 level, but the Microsoft Media Foundation H.264 Video Encoder can
+derive the proper level for a given video stream, so it is recommended not to override
+the encoder's selected level.
+
+(TODO: Find all attributes that must be set on an H.264 codec.)
+(TODO: Find what a stream identifier is and how to write into one or read from one.)
+
+To specify the attributes for the H.264 video stream, create an attribute store and set the
+following attributes:
+MF_MT_SUBTYPE Set to MFVideoFormat_H264.
+MF_MT_MPEG2_PROFILE H.264 profile.
+MF_MT_FRAME_SIZE Frame size.
+MF_MT_FRAME_RATE Frame rate.
+MF_MT_AVG_BITRATE Encoded bit rate.
+
+IMFAttributes *pAttributes = NULL;
+const H264ProfileInfo& profile = h264_profiles[index];
+MFCreateAttributes(&pAttributes, 5);
+pAttributes->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
+pAttributes->SetUINT32(MF_MT_MPEG2_PROFILE, profile.profile);
+MFSetAttributeSize(pAttributes, MF_MT_FRAME_SIZE,profile.frame_size.Numerator, profile.frame_size.Numerator);
+MFSetAttributeRatio(pAttributes, MF_MT_FRAME_RATE,profile.fps.Numerator, profile.fps.Denominator);
+pAttributes->SetUINT32(MF_MT_AVG_BITRATE, profile.bitrate)
+pAttributes->Release();
+
+A video decoder that decodes H.264 video. It supports decoding of Baseline, Main,
+and High profiles, up to level 5.1.
+
+A video encoder that encodes H.264 video. It supports the following H.264 profiles:
+1) Baseline Profile
+2) Main Profile
+
+The Media Foundation H.264 video decoder is a Media Foundation Transform that
+supports decoding of Baseline, Main, and High profiles, up to level 5.1.
+The H.264 video decoder exposes the following interfaces:
+1) ICodecAPI (supported in Windows 8)
+2) IMFGetService
+3) IMFQualityAdvise
+4) IMFQualityAdvise2
+5) IMFRateControl
+6) IMFRateSupport
+7) IMFRealTimeClient
+8) IMFTransform
+
+To create an instance of the decoder, do one of the following:
+Call the MFTEnum or MFTEnumEx function.
+Call CoCreateInstance. The CLSID for the decoder is
+CLSID_CMSH264DecoderMFT, declared in wmcodecdsp.h.
+
+The input type must contain at least the following two attributes:
+1) MF_MT_MAJOR_TYPE MFMediaType_Video
+2) MF_MT_SUBTYPE MFVideoFormat_H264 or MFVideoFormat_H264_ES
+
+If the input type contains only these two attributes, the decoder will offer a default
+output type, which acts as a placeholder. When the decoder receives enough input
+samples to produce an output frame, it signals a format change by returning
+MF_E_TRANSFORM_STREAM_CHANGE from IMFTransform::ProcessOutput. See the
+ProcessOutput documentation for details about handling format changes.
+
+To avoid an initial format change, provide as much information in the input type as
+possible, including:
+1) MF_MT_FRAME_RATE (https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D1438-) Frame rate.
+2) MF_MT_FRAME_SIZE (https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D1441-) Frame dimensions.
+3) MF_MT_INTERLACE_MODE (https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D1457-) Interlace mode.
+[!Note]
+In H.264 video, the interlace structure can change
+dynamically, so the recommended value of this attribute is
+MFVideoInterlace_MixedInterlaceOrProgressive. Interlace
+information in the video elementary stream takes
+precedence over the media type. For more information, see
+Video Interlacing.
+4) MF_MT_PIXEL_ASPECT_RATIO (https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D1481-) Pixel aspect ratio.
+
+The input type must be set before the output type. Until the input type is set, the
+encoder's IMFTransform::SetOutputType method returns
+MF_E_TRANSFORM_TYPE_NOT_SET.
+
+The decoder supports the following output subtypes:
+1) MFVideoFormat_I420
+2) MFVideoFormat_IYUV
+3) MFVideoFormat_NV12
+4) MFVideoFormat_YUY2
+5) MFVideoFormat_YV12
+For more information about these subtypes, see Video Subtype GUIDs (https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D52-)
+
+The H.264 decoder implements the IMFTransform::GetAttributes method. Applications
+can use this method to get or set the following attributes:
+1) CODECAPI_AVDecVideoAcceleration_H264 Enables or disables hardware acceleration.
+2) CODECAPI_AVDecVideoThumbnailGenerationMode Enables or disables thumbnail generation
+mode.
+3) MF_SA_D3D_AWARE Indicates that the decoder supports DirectX
+Video Acceleration (DXVA). Treat as read-only.
+
+In Windows 8, the H.264 decoder also supports the following attributes:
+1) CODECAPI_AVLowLatencyMode Enables or disables low-latency decoding mode.
+2) CODECAPI_AVDecNumWorkerThreads Sets the number of worker threads used by the decoder.
+3) CODECAPI_AVDecVideoMaxCodedWidth Sets the maximum picture width that the decoder will accept as an input type.
+4) CODECAPI_AVDecVideoMaxCodedHeight Sets the maximum picture height that the decoder will accept as an input type.
+5) MF_SA_MINIMUM_OUTPUT_SAMPLE_COUNT Specifies the maximum number of output samples.
+6) MFT_DECODER_EXPOSE_OUTPUT_TYPES_IN_NATIVE_ORDER Specifies whether a decoder exposes IYUV/I420 output types (suitable for transcoding) before other formats.
+
+In Windows 8, the H.264 decoder supports the ICodecAPI interface. This interface
+provides an alternativate API for setting the following codec properties.
+1) CODECAPI_AVDecVideoMaxCodedWidth
+2) CODECAPI_AVDecVideoAcceleration_H264
+3) CODECAPI_AVDecVideoMaxCodedHeight
+4) CODECAPI_AVDecVideoMaxCodedWidth
+5) CODECAPI_AVDecVideoThumbnailGenerationMode
+
+The decoder supports the following formats:
+Profiles/Levels -- Baseline, Main, and High profiles, up to level 5.1. (See ITU-T H.264 specification
+for details.)
+Chroma Formats -- 4:2:0 chroma or monochrome
+Minimum Resolution -- 48 × 48 pixels
+Maximum Resolution -- 4096 × 2304 pixels
+The maximum guaranteed resolution for DXVA acceleration is 1920 × 1088
+pixels; at higher resolutions, decoding is done with DXVA, if it is supported by the
+underlying hardware, otherwise, decoding is done with software.
+[!Note]
+In Windows 7, the maximum supported resolution is 1920 × 1088 pixels for
+both software and DXVA decoding.
+
+Input data must conform to Annex B of ISO/IEC 14496-10. The data must include the
+start codes. The decoder skips bytes until it finds a valid sequence parameter set (SPS)
+and picture parameter set (PPS) in the byte stream.
+
+H.264 Video Encoder
+The Microsoft Media Foundation H.264 video encoder is a Media Foundation transform that supports the following H.264 profiles:
+1) Baseline Profile
+2) Main Profile
+3) High profile (requires Windows 8)
+The H.264 video encoder exposes the following interfaces:
+1) ICodecAPI
+2) IMFTransform
+
+The input media type must have one of the following subtypes:
+1) MFVideoFormat_I420
+2) MFVideoFormat_IYUV
+3) MFVideoFormat_NV12
+4) MFVideoFormat_YUY2
+5) MFVideoFormat_YV12
+For more information about these subtypes, see Video Subtype GUIDs.
+The output type must be set before the input type. Until the output type is set, the encoder's
+IMFTransform::SetInputType method returns MF_E_TRANSFORM_TYPE_NOT_SET.
+
+The encoder supports a single output subtype:
+MFVideoFormat_H264
+
+Set the following attributes on the output media type:
+1) MF_MT_MAJOR_TYPE Major type. Must be MFMediaType_Video.
+2) MF_MT_SUBTYPE Video subtype. Must be MFVideoFormat_H264.
+3) MF_MT_AVG_BITRATE Average encoded bit rate, in bits per second. Must be greater than zero.
+4) MF_MT_FRAME_RATE Frame rate.
+5) MF_MT_FRAME_SIZE Frame size.
+6) MF_MT_INTERLACE_MODE Interlace mode.
+7) MF_MT_MPEG2_PROFILE H.264 encoding profile.
+The supported values are:
+7.a) eAVEncH264VProfile_Base (default)
+7.b) eAVEncH264VProfile_Main
+7.c) eAVEncH264VProfile_High (requires Windows 8)
+8) MF_MT_MPEG2_LEVEL Optional. Specifies the H.264 encoding level.
+The default value is –1, indicating that the encoder will select the encoding level.
+It is recommended not to set the level in the media type, and allow the
+encoder to select the level. The encoder can derive the proper level for a
+given video stream, taking into account the format constraints and the
+characteristics of the video. For more information about profile and level
+constraints, refer to Annex A of ITU-T H.264.
+9) MF_MT_PIXEL_ASPECT_RATIO Optional. Specifies the pixel aspect ratio. The default value is 1:1.
+
+After the output type is set, the video encoder updates the type by adding the
+MF_MT_MPEG_SEQUENCE_HEADER attribute. This attribute contains the sequence header.
+
+The H.264 encoder implements the ICodecAPI interface for setting encoding parameters. It
+supports the following properties:
+(The following properties are supported in Windows 7.)
+1) CODECAPI_AVEncCommonRateControlMode Sets the rate control mode. See Remarks. The default mode
+is unconstrained variable bit rate (VBR)
+2) CODECAPI_AVEncCommonQuality Sets the quality level. This property applies when the rate control mode is quality-based VBR (eAVEncCommonRateControlMode_Quality). The valid range is 1–100. The default value is 70. To set this parameter, set the property before calling IMFTransform::SetOutputType. To set this parameter in Windows 7, set the property before calling IMFTransform::SetOutputType. The encoder ignores changes after the output type is set. In Windows 8, this property can be set at any time during encoding. Changes are applied starting at the next input frame. Internally, the encoder converts this property to an AVEncVideoEncodeQP value.
+(The following properties require Windows 8.)
+3) CODECAPI_AVEncAdaptiveMode Sets the adaptive encoding mode. The H.264 encoder supports the following modes in Windows 8:
+3.a) eAVEncAdaptiveMode_None. No adaptive encoding. (Default.)
+3.b) eAVEncAdaptiveMode_FrameRate. Adaptively change the frame rate.
+4) CODECAPI_AVEncCommonBufferSize Sets the buffer size, in bytes, for constant bit rate (CBR) encoding. The valid range is [1 ... 2³²–1]. Requires Windows 8.
+5) CODECAPI_AVEncCommonMaxBitRate For constrained VBR encoding, specifies the rate at which the "leaky bucket" is drained, in bits per second. This property applies when the rate control mode is eAVEncCommonRateControlMode_PeakConstrainedVBR. The valid range is [1 ... 2³²–1].
+6) CODECAPI_AVEncCommonMeanBitRate Sets the average bit rate for the encoded bit stream, in bits per second. This property is ignored if the rate control mode is eAVEncCommonRateControlMode_Quality. The valid range is [1 ... 2³²–1].
+In CBR and unconstrained VBR modes, the average bit rate determines the final size of the file. In CBR mode, the average bit rate is also the rate at which compressed bits are drained from the "leaky bucket." (For more information, see The Leaky Bucket Buffer Model.) In Windows 7, the average bit rate is specified by the MF_MT_AVG_BITRATE attribute on the media type. In Windows 8, you can set the average bit rate using either the MF_MT_AVG_BITRATE attribute or the
+CODECAPI_AVEncCommonMeanBitRate property. If both are set, CODECAPI_AVEncCommonMeanBitRate overrides. In
+Windows 8, you can set the average bit rate during encoding. If the bit rate changes, the encoder uses adaptive encoding.
+7) CODECAPI_AVEncCommonQualityVsSpeed Sets the quality/speed tradeoff. Valid range:
+7.a) 0–33: Low complexity
+7.b) 34–66: Medium complexity (default)
+7.c) 67–100: High complexity
+This value affects how the encoder performs various encoding operations, such as motion compensation. At higher
+complexity levels, the encoder runs more slowly but produces better quality at the same bit rate.
+8) CODECAPI_AVEncH264CABACEnable Enables or disables CABAC (context-adaptive binary arithmetic coding) for H.264 entropy coding. The default value is VARIANT_FALSE. CABAC is not used for Baseline profile.
+9) CODECAPI_AVEncH264SPSID Sets the value of seq_parameter_set_id in the SPS NAL unit of the H.264 bitstream.
+10) CODECAPI_AVEncMPVDefaultBPictureCount Sets the maximum number of consecutive B frames in the output bitstream. Valid values are:
+10.a) 0: Do not use B frames (default).
+10.b) 1: Use one B frame.
+10.c) 2: Use two B frames.
+To set this parameter, set the property before calling IMFTransform::SetOutputType.
+For Baseline profile, the number of B frames is always zero. The encoder will override nonzero values.
+For other H.264 profiles, if this property is nonzero, the encoding pattern is IBBPBBP, where the maximum number of
+consecutive B frames is equal to CODECAPI_AVEncMPVDefaultBPictureCount.
+11) CODECAPI_AVEncMPVGOPSize Sets the number of pictures from one GOP header to the next, including the leading anchor but not the following one. The valid range is [0 ... 2³²–1]. If zero, the encoder selects the GOP size. The default value is zero.
+12) CODECAPI_AVEncNumWorkerThreads Sets the number of worker threads used by a encoder. The valid range is 0–16. If zero, the encoder selects the number of threads.
+13) CODECAPI_AVEncVideoContentType Indicates the type of video content.
+14) CODECAPI_AVEncVideoEncodeQP Valid range: 16–51. The default value is 24.
+This property applies when the rate control mode is eAVEncCommonRateControlMode_Quality.
+This property configures the same encoding setting as AVEncCommonQuality. However, AVEncVideoEncodeQP
+enables the application to specify the value of QP directly. If both properties are set, AVEncVideoEncodeQP overrides.
+The default value of 24 corresponds to the default value of 70 for the AVEncCommonQuality setting.
+15) CODECAPI_AVEncVideoForceKeyFrame Forces the encoder to code the next frame as a key frame.
+16) CODECAPI_AVEncVideoMinQP Valid range: 0–51. The default value is 0.
+This property applies to all rate control modes. The encoder should not produce a QP value lower than what is specified by the CODECAPI_AVEncVideoMinQP property.
+17) CODECAPI_AVLowLatencyMode Enables or disables low-latency mode. See "Multithreading" in the Remarks section.
+
+The encoder supports the following rate control modes:
+1) Constant bit rate (CBR) -- eAVEncCommonRateControlMode_CBR -- The encoder tries to achieve a constant bit rate, using a "leaky bucket" model. The target bit rate is given by the CODECAPI_AVEncCommonMeanBitRate property. Requires Windows 8.
+2) Constrained variable bit rate (VBR) -- eAVEncCommonRateControlMode_PeakConstrainedVBR -- The encoder uses a "leaky bucket" model with a peak bit rate. The drain rate for the leaky bucket is given by the CODECAPI_AVEncCommonMaxBitRate
+property. Requires Windows 8.
+3) Quality-based variable bit rate (VBR) -- eAVEncCommonRateControlMode_Quality -- The encoder tries to achieve a constant quality level, given by the AVEncCommonQuality property.
+4) Unconstrained VBR -- eAVEncCommonRateControlMode_UnconstrainedVBR -- The encoder tries to achieve the target
+bitrate given by the MF_MT_AVG_BITRATE attribute in the output media type. This is the default mode.
+
+CBR and constrained VBR modes require Windows 8.
+
+In Windows 8, the encoder sets the following attributes on the output samples:
+1) MFSampleExtension_DecodeTimestamp
+2) MFSampleExtension_VideoEncodePictureType
+3) MFSampleExtension_VideoEncodeQP
+
+In Windows 8, the encoder supports two encoding modes:
+1) Slice encoding. In this mode, slices are encoded in parallel. Each slice is encoded on a
+different thread. This mode has low latency, because a single picture is encoded in parallel.
+However, this approach does not scale as the number of cores increases, because the
+number of slices is bounded by the number of macroblock rows in the input picture.
+2_ Multi-frame encoding. In this mode, the encoder accepts multiple frames of input and
+encodes them in parallel. This mode scales better in a multicore environment, but introduces
+more latency.
+
+The encoder defaults to slice encoding, to minimize latency. To enable multi-frame encoding, set
+the CODECAPI_AVLowLatencyMode property to VARIANT_FALSE.
+
+To set the number of worker threads used by the encoder, set the
+CODECAPI_AVEncNumWorkerThreads property.
+In Windows 7, the encoder always uses slice encoding.
+
+Minimum supported client Windows 7 [desktop apps only]
+Minimum supported server None supported
+DLL Mfh264enc.dll
+
+HRESULT IMFTransform::ProcessInput(
+  [in] DWORD     dwInputStreamID,
+/* Input stream identifier. To get the list of stream identifiers, call IMFTransform::GetStreamIDs. */
+
+  [in] IMFSample *pSample,
+/* Pointer to the IMFSample interface of the input sample. The sample must contain at least one media buffer that contains valid input data. */
+
+  [in] DWORD     dwFlags  // Reserved. Must be zero.
+);
+Delivers data to an input stream on this Media Foundation transform (MFT).
+The method returns an HRESULT. Possible values include, but are not limited to, those in the following table.
+
+S_OK -- The method succeeded.
+E_INVALIDARG -- Invalid argument.
+MF_E_INVALIDSTREAMNUMBER -- Invalid stream identifier.
+MF_E_NO_SAMPLE_DURATION -- The input sample requires a valid sample duration. To set the duration, call IMFSample::SetSampleDuration.
+Some MFTs require that input samples have valid durations. Some MFTs do not require sample durations.
+MF_E_NO_SAMPLE_TIMESTAMP -- The input sample requires a time stamp. To set the time stamp, call IMFSample::SetSampleTime.
+Some MFTs require that input samples have valid time stamps. Some MFTs do not require time stamps.
+MF_E_NOTACCEPTING -- The transform cannot process more input at this time.
+MF_E_TRANSFORM_TYPE_NOT_SET -- The media type is not set on one or more streams.
+MF_E_UNSUPPORTED_D3D_TYPE -- The media type is not supported for DirectX Video Acceleration (DXVA). A DXVA-enabled decoder might return this error code.
+
+In most cases, if the method succeeds, the MFT stores the sample and holds a reference count on the IMFSample pointer. Do not re-use the sample until the MFT releases the sample. Instead of storing the sample, however, an MFT might copy the sample data into a new buffer. In that case, the MFT should set the MFT_INPUT_STREAM_DOES_NOT_ADDREF flag in the IMFTransform::GetInputStreamInfo method.
+
+If the MFT already has enough input data to produce an output sample, it does not accept new input data, and ProcessInput returns MF_E_NOTACCEPTING. At that point, the client should clear the pending input data by doing one of the following:
+1) Generate new output by calling IMFTransform::ProcessOutput.
+2) Flush the input data by calling IMFTransform::ProcessMessage with the MFT_MESSAGE_COMMAND_FLUSH message.
+
+An exception to this rule is the MFT_OUTPUT_STREAM_LAZY_READ flag. When this flag is present, the transform will discard stored samples if you give it more input. For more information, see IMFTransform::GetOutputStreamInfo. A transform should never queue any more input data than is required to produce the correct output.
+
+An MFT can process the input data in the ProcessInput method. However, most MFTs wait until the client calls ProcessOutput.
+
+After the client has set valid media types on all of the streams, the MFT should always be in one of two states: Able to accept more input, or able to produce more output. It should never be in both states or neither state. An MFT should only accept as much input as it needs to generate at least one output sample, at which point ProcessInput returns MF_E_NOTACCEPTING. When ProcessInput returns MF_E_NOTACCEPTING, the client can assume that the MFT is ready to produce output.
+
+If an MFT encounters a non-fatal error in the input data, it can simply drop the data and attempt to recover when it gets the more input data. To request more input data, the MFT returns MF_E_TRANSFORM_NEED_MORE_INPUT from the IMFTransform::ProcessOutput method. If the MFT drops any data, it should set the MFSampleExtension_Discontinuity attribute attribute on the next output sample, to notify the caller that there is a gap in the data stream.
+
+The previous remarks describe the synchronous processing model. To support asynchronous processing, see Asynchronous MFTs (https://learn.microsoft.com/en-us/windows/desktop/medfound/asynchronous-mfts). 
+
+IMFSample interface (mfobjects.h)
+Represents a media sample, which is a container object for media data. For video, a sample typically contains one video frame.
+A media sample contains zero or more buffers. Each buffer manages a block of memory, and is represented by the IMFMediaBuffer interface. A sample can have multiple buffers. The buffers are kept in an ordered list and accessed by index value. It is also valid to have an empty sample with no buffers.
+The IMFSample interface inherits from IMFAttributes.
+The IMFSample interface has these methods:
+IMFSample::AddBuffer -- Adds a buffer to the end of the list of buffers in the sample.
+IMFSample::ConvertToContiguousBuffer -- Converts a sample with multiple buffers into a sample with a single buffer.
+IMFSample::CopyToBuffer -- Copies the sample data to a buffer. This method concatenates the valid data from all of the buffers of the sample, in order.
+IMFSample::GetBufferByIndex -- Gets a buffer from the sample, by index.
+IMFSample::GetBufferCount -- Retrieves the number of buffers in the sample.
+IMFSample::GetSampleDuration -- Retrieves the duration of the sample.
+IMFSample::GetSampleFlags -- Retrieves flags associated with the sample. Currently no flags are defined.
+IMFSample::GetSampleTime -- Retrieves the presentation time of the sample.
+IMFSample::GetTotalLength -- Retrieves the total length of the valid data in all of the buffers in the sample. The length is calculated as the sum of the values retrieved by the IMFMediaBuffer::GetCurrentLength method.
+IMFSample::RemoveAllBuffers -- Removes all of the buffers from the sample.
+IMFSample::RemoveBufferByIndex -- Removes a buffer at a specified index from the sample.
+IMFSample::SetSampleDuration -- Sets the duration of the sample.
+IMFSample::SetSampleFlags -- Sets flags associated with the sample. Currently no flags are defined.
+IMFSample::SetSampleTime -- Sets the presentation time of the sample.
+
+To create a new media sample, call MFCreateSample.
+
+When you call CopyAllItems, inherited from the IMFAttributes interface, on an IMFSample, the sample time, duration, and flags are not copied to the destination sample. You must copy these values to the new sample manually. 
+
+Minimum supported client 	Windows Vista [desktop apps | UWP apps]
+Minimum supported server 	Windows Server 2008 [desktop apps | UWP apps]
+Target Platform 	Windows
+Header 	mfobjects.h (include Mfidl.h)
+
+HRESULT IMFSample::AddBuffer(
+  [in] IMFMediaBuffer *pBuffer  // Pointer to the buffer's IMFMediaBuffer interface.
+);
+Adds a buffer to the end of the list of buffers in the sample.
+
+For uncompressed video data, each buffer should contain a single video frame, and samples should not contain multiple frames. In general, storing multiple buffers in a sample is discouraged.
+
+IMFMediaBuffer
+Represents a block of memory that contains media data. Use this interface to access the data in the buffer.
+IMFMediaBuffer::GetCurrentLength -- Retrieves the length of the valid data in the buffer.
+IMFMediaBuffer::GetMaxLength -- Retrieves the allocated size of the buffer.
+IMFMediaBuffer::Lock -- Gives the caller access to the memory in the buffer, for reading or writing.
+IMFMediaBuffer::SetCurrentLength -- Sets the length of the valid data in the buffer.
+IMFMediaBuffer::Unlock -- Unlocks a buffer that was previously locked. Call this method once for every call to IMFMediaBuffer::Lock.
+
+If the buffer contains 2-D image data (such as an uncompressed video frame), you should query the buffer for the IMF2DBuffer interface. The methods on IMF2DBuffer are optimized for 2-D data.
+
+To get a buffer from a media sample, call one of the following IMFSample methods:
+1) IMFSample::ConvertToContiguousBuffer
+2) IMFSample::GetBufferByIndex
+
+To create a new buffer object, use one of the following functions:
+1) MFCreateMemoryBuffer 	Creates a buffer and allocates system memory.
+2) MFCreateMediaBufferWrapper 	Creates a media buffer that wraps an existing media buffer.
+3) MFCreateDXSurfaceBuffer 	Creates a buffer that manages a DirectX surface.
+4) MFCreateAlignedMemoryBuffer 	Creates a buffer and allocates system memory with a specified alignment.
+
+HRESULT MFCreateAlignedMemoryBuffer(
+  DWORD          cbMaxLength,  // Size of the buffer, in bytes.
+  DWORD          cbAligment, // Specifies the memory alignment for the buffer. Use one of the following constants:
+/*
+MF_1_BYTE_ALIGNMENT -- Align to 1 bytes.
+MF_2_BYTE_ALIGNMENT -- Align to 2 bytes.
+MF_4_BYTE_ALIGNMENT -- Align to 4 bytes.
+MF_8_BYTE_ALIGNMENT -- Align to 8 bytes.
+MF_16_BYTE_ALIGNMENT -- Align to 16 bytes.
+MF_32_BYTE_ALIGNMENT -- Align to 32 bytes.  // use this one
+MF_64_BYTE_ALIGNMENT -- Align to 64 bytes.
+MF_128_BYTE_ALIGNMENT -- Align to 128 bytes.
+MF_256_BYTE_ALIGNMENT -- Align to 256 bytes.
+MF_512_BYTE_ALIGNMENT -- Align to 512 bytes.
+*/
+
+  IMFMediaBuffer **ppBuffer  // Receives a pointer to the IMFMediaBuffer interface of the media buffer. The caller must release the interface.
+);
+Allocates system memory with a specified byte alignment and creates a media buffer to manage the memory.
+When the media buffer object is destroyed, it releases the allocated memory.
+
+HRESULT IMFMediaBuffer::GetCurrentLength(
+  [out] DWORD *pcbCurrentLength  /* Receives the length of the valid data, in bytes. If the buffer does not contain any valid data, the value is zero.*/
+);
+
+HRESULT IMFMediaBuffer::GetMaxLength(
+  [out] DWORD *pcbMaxLength  // Receives the allocated size of the buffer, in bytes.
+);
+The buffer might or might not contain any valid data, and if there is valid data in the buffer, it might be smaller than the buffer's allocated size. To get the length of the valid data, call IMFMediaBuffer::GetCurrentLength.
+
+HRESULT IMFMediaBuffer::Lock(
+  [out] BYTE  **ppbBuffer,  // Receives a pointer to the start of the buffer.
+  [out] DWORD *pcbMaxLength,  /* Receives the maximum amount of data that can be written to the buffer. This parameter can be NULL. The same value is returned by the IMFMediaBuffer::GetMaxLength method. */
+  [out] DWORD *pcbCurrentLength  /* Receives the length of the valid data in the buffer, in bytes. This parameter can be NULL. The same value is returned by the IMFMediaBuffer::GetCurrentLength method. */
+);
+This method gives the caller access to the entire buffer, up to the maximum size returned in the pcbMaxLength parameter. The value returned in pcbCurrentLength is the size of any valid data already in the buffer, which might be less than the total buffer size.
+The pointer returned in ppbBuffer is guaranteed to be valid, and can safely be accessed across the entire buffer for as long as the lock is held. When you are done accessing the buffer, call IMFMediaBuffer::Unlock to unlock the buffer. You must call Unlock once for each call to Lock. After you unlock the buffer, the pointer returned in ppbBuffer is no longer valid, and should not be used. Generally, it is best to call Lock only when you need to access the buffer memory, and not earlier.
+
+Locking the buffer does not prevent other threads from calling Lock, so you should not rely on this method to synchronize threads.
+
+This method may allocate memory, but does not transfer ownership of the memory to the caller. Do not release or free the memory; the media buffer will free the memory when the media buffer is destroyed.
+
+If you modify the contents of the buffer, update the current length by calling IMFMediaBuffer::SetCurrentLength.
+
+This method may internally allocate some memory, so if the buffer supports the IMF2DBuffer interface, you should use the IMF2DBuffer::Lock2D method to lock the buffer instead. For 2-D buffers, the Lock2DSize method can be more efficient than the Lock method, depending on the MF2DBuffer_LockFlags value you specify. Calling Lock2DSize with MF2DBuffer_LockFlags_Read won’t incur a copy back when the buffer is unlocked and calling it with MF2DBuffer_LockFlags_Write won’t incur a copy from the internal buffer. Calling Lock2DSize with LockFlags_ReadWrite behaves the same as Lock and Lock2D and will incur a both copy from and copy back when unlocked. The general guidance for best performance is to avoid using IMFMediaBuffer and IMF2DBuffer whenever possible and instead use IMF2DBuffer2 with the minimum required lock flags. Note that if the buffer is locked using Lock2D, the Lock method might return MF_E_INVALIDREQUEST.
+
+HRESULT IMFMediaBuffer::SetCurrentLength(
+  [in] DWORD cbCurrentLength  /* Length of the valid data, in bytes. This value cannot be greater than the allocated size of the buffer, which is returned by the IMFMediaBuffer::GetMaxLength method. */
+);
+
+HRESULT IMFMediaBuffer::Unlock();
+
+IMF2DBuffer
+Represents a buffer that contains a two-dimensional surface, such as a video frame.
+IMF2DBuffer::ContiguousCopyFrom -- Copies data to this buffer from a buffer that has a contiguous format.
+IMF2DBuffer::ContiguousCopyTo -- Copies this buffer into the caller's buffer, converting the data to contiguous format.
+IMF2DBuffer::GetContiguousLength -- Retrieves the number of bytes needed to store the contents of the buffer in contiguous format.
+IMF2DBuffer::GetScanline0AndPitch -- Retrieves a pointer to the buffer memory and the surface stride.
+IMF2DBuffer::IsContiguousFormat -- Queries whether the buffer is contiguous in its native format.
+IMF2DBuffer::Lock2D -- Gives the caller access to the memory in the buffer. (IMF2DBuffer.Lock2D)
+IMF2DBuffer::Unlock2D -- Unlocks a buffer that was previously locked. Call this method once for each call to IMF2DBuffer::Lock2D.
+To get a pointer to this interface, call QueryInterface on the media buffer:
+m_pBuffer->QueryInterface(IID_IMF2DBuffer, (void**)&m_p2DBuffer);  // release both buffers
+LONG stride;
+m_p2DBuffer->Lock2D(ppbScanLine0, &stride);  // for 2D
+
+stopped here: https://learn.microsoft.com/en-us/windows/win32/api/mfobjects/nn-mfobjects-imf2dbuffer
+stopped here: https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fwindows%2Fwin32%2Fmedfound%2Ftoc.json#D44-
+
+_CRT_SECURE_NO_WARNINGS
+D:\Microsoft DirectX SDK %28June 2010%29\Include;D:\source\repos\libpng-libpng16
+D:\Microsoft DirectX SDK %28June 2010%29\Lib\x64;D:\source\repos\libpng-libpng16\projects\vstudio\x64\Release Library
+D:\source\repos\libpng-libpng16\projects\vstudio\Release Library
+D:\Microsoft DirectX SDK %28June 2010%29\Lib\x86;D:\source\repos\libpng-libpng16\projects\vstudio\Release Library
+libpng16.lib;zlib.lib;Rpcrt4.lib;Strmiids.lib;d3d9.lib

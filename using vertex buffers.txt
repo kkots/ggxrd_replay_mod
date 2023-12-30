@@ -1,0 +1,69 @@
+Create your vertex buffer in D3DPOOL_DEFAULT memory pool with D3DUSAGE_DYNAMIC usage flag.
+D3DUSAGE_DYNAMIC is for resources that update frequently.
+When locking the buffer, specify D3DLOCK_DISCARD in the Lock call. It means you will receive an empty buffer every time, that you must fill in.
+device->CreateVertexBuffer
+vertexBuffer->Lock
+vertexBuffer->Unlock
+device->SetStreamSource
+device->DrawPrimitive
+device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+// Thanks to WorseThanYou for fixing the RHW value for Intel GPUs (was 0.F, didn't work)
+
+Will need two buffers for two types of vertices: color vertices and texture vertices.
+Buffers have limited size.
+
+	if (clearStencil && allowedToUseStencil) {
+		stencil.clearRegion(device, *boundingRect);
+	}
+
+drawing box:
+if (stencil.initialized) {
+	device->SetRenderState(D3DRS_STENCILENABLE, TRUE);  // Thanks to WorseThanYou for the idea of using Stenciling
+	device->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_EQUAL);
+	device->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_INCRSAT);
+}
+device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+device->SetVertexShader(nullptr);
+device->SetPixelShader(nullptr);
+device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+device->SetTexture(0, nullptr);
+
+primitive type: D3DPT_TRIANGLESTRIP
+
+drawing textured box:
+device->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+device->SetVertexShader(nullptr);
+device->SetPixelShader(nullptr);
+device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+device->SetTexture(0, packedTexture);
+
+primitive type: D3DPT_TRIANGLESTRIP
+
+drawing outline (non-1 thickness):
+device->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+device->SetVertexShader(nullptr);
+device->SetPixelShader(nullptr);
+device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+device->SetTexture(0, nullptr);
+
+primitive type: D3DPT_TRIANGLESTRIP
+
+outline 1 thickness:
+same render state
+primitive type: D3DPT_LINESTRIP
+
+drawing point:
+device->SetRenderState(D3DRS_STENCILENABLE, FALSE);
+device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+device->SetVertexShader(nullptr);
+device->SetPixelShader(nullptr);
+device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+device->SetTexture(0, nullptr);

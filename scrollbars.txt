@@ -1,0 +1,192 @@
+int GetSystemMetrics (int)
+SM_CXHSCROLL 	Width of arrow bitmap on horizontal scroll bar
+SM_CXHTHUMB 	Width of scroll box on horizontal scroll bar. This value retrieves the width a scroll bar that has a page size of zero.
+SM_CXVSCROLL 	Width of arrow bitmap on vertical scroll bar
+SM_CYHSCROLL 	Height of arrow bitmap on horizontal scroll bar
+SM_CYVSCROLL 	Height of arrow bitmap on vertical scroll bar
+SM_CYVTHUMB 	Height of scroll box on vertical scroll bar. This value retrieves the height of a scroll bar that has a page size of zero.
+
+
+// Description:
+//   Creates a horizontal scroll bar along the bottom of the parent 
+//   window's area.
+// Parameters:
+//   hwndParent - handle to the parent window.
+//   sbHeight - height, in pixels, of the scroll bar.
+// Returns:
+//   The handle to the scroll bar.
+HWND CreateAHorizontalScrollBar(HWND hwndParent, int sbHeight)
+{
+    RECT rect;
+
+    // Get the dimensions of the parent window's client area;
+    if (!GetClientRect(hwndParent, &rect))
+        return NULL;
+
+    // Create the scroll bar.
+    return (CreateWindowEx( 
+            0,                      // no extended styles 
+            L"SCROLLBAR",           // scroll bar control class 
+            (PTSTR) NULL,           // no window text 
+            WS_CHILD | WS_VISIBLE   // window styles  
+                | SBS_VERT | SBS_RIGHTALIGN,         // horizontal scroll bar style 
+            rect.left,              // horizontal position 
+            rect.bottom - sbHeight, // vertical position 
+            rect.right,             // width of the scroll bar 
+            sbHeight,               // height of the scroll bar
+            hwndParent,             // handle to main window 
+            (HMENU) NULL,           // no menu 
+            g_hInst,                // instance owning this window 
+            (PVOID) NULL            // pointer not needed 
+        )); 
+}
+
+The WM_SIZE Message
+call SetScrollInfo here
+
+if PageSize > 1 it decreases the maximum possible reported scroll value
+MaxScrollPos = MaxRangeValue - (PageSize - 1) 
+
+WM_VSCROLL message
+
+wParam The LOWORD specifies a scroll bar value that indicates the user's scrolling request. This parameter can be one of the following values.
+SB_BOTTOM
+
+	Scrolls to the lower right.
+
+SB_ENDSCROLL
+
+	Ends scroll.
+
+SB_LINEDOWN
+
+	Scrolls one line down.
+
+SB_LINEUP
+
+	Scrolls one line up.
+
+SB_PAGEDOWN
+
+	Scrolls one page down.
+
+SB_PAGEUP
+
+	Scrolls one page up.
+
+SB_THUMBTRACK
+
+	The user is dragging the scroll box. This message is sent repeatedly until the user releases the mouse button. The HIWORD indicates the position that the scroll box has been dragged to.
+
+SB_TOP
+
+	Scrolls to the upper left.
+
+lParam == handle to the scroll bar control
+wParam == The HIWORD specifies the current position of the scroll box if the LOWORD is SB_THUMBPOSITION or SB_THUMBTRACK; otherwise, this word is not used. (16 bits max scroll position)
+
+SetScrollInfo(scroll bar handle, SB_CTL, &scrollInfo, redraw?)
+fMask: 
+SIF_DISABLENOSCROLL
+
+	Disables the scroll bar instead of removing it, if the scroll bar's new parameters make the scroll bar unnecessary.
+
+SIF_PAGE
+
+	Sets the scroll page to the value specified in the nPage member of the SCROLLINFO structure pointed to by lpsi.
+
+SIF_POS
+
+	Sets the scroll position to the value specified in the nPos member of the SCROLLINFO structure pointed to by lpsi.
+
+SIF_RANGE
+
+	Sets the scroll range to the value specified in the nMin and nMax members of the SCROLLINFO structure pointed to by lpsi. 
+
+SCROLLINFO scrollInfo;
+typedef struct tagSCROLLINFO {
+  UINT cbSize;
+  UINT fMask;
+  int  nMin;  // min scrolling position
+  int  nMax;  // max scrolling position
+  UINT nPage;  // page size (1 default - should reflect the size of the visible portion of the content)
+  int  nPos;  // position. must be between nMin and nMax - (pagesize - 1)
+  int  nTrackPos;  // Specifies the immediate position of a scroll box that the user is dragging
+} SCROLLINFO, *LPSCROLLINFO;
+
+ScrollWindowEx(mainWindowHandle,
+	dx,  // by how much to scroll
+	dy,
+	const RECT*, // portion to scroll, NULL for all
+	const RECT*, // clipping region. nothing outside the region may be modified. scrolling only a portion of window?
+	NULL, // HRGN, handle to the region that is modified to hold the region invalidated by scrolling
+	LPRECT,  // boundaries of invalidated region. may be null
+	flags)  // SW_SMOOTHSCROLL, SW_INVALIDATE or SW_ERASE Use the HIWORD portion of the flags parameter to indicate how much time, in milliseconds, the smooth-scrolling operation should take. 
+returns SIMPLEREGION, COMPLEXREGION, NULLREGION or ERROR (GetLastError)
+
+
+
+case WM_VSCROLL:
+        // Get all the vertial scroll bar information.
+        si.cbSize = sizeof (si);
+        si.fMask  = SIF_ALL;
+        GetScrollInfo (hwnd, SB_VERT, &si);
+
+        // Save the position for comparison later on.
+        yPos = si.nPos;
+        switch (LOWORD (wParam))
+        {
+
+        // User clicked the HOME keyboard key.
+        case SB_TOP:
+            si.nPos = si.nMin;
+            break;
+              
+        // User clicked the END keyboard key.
+        case SB_BOTTOM:
+            si.nPos = si.nMax;
+            break;
+              
+        // User clicked the top arrow.
+        case SB_LINEUP:
+            si.nPos -= 1;
+            break;
+              
+        // User clicked the bottom arrow.
+        case SB_LINEDOWN:
+            si.nPos += 1;
+            break;
+              
+        // User clicked the scroll bar shaft above the scroll box.
+        case SB_PAGEUP:
+            si.nPos -= si.nPage;
+            break;
+              
+        // User clicked the scroll bar shaft below the scroll box.
+        case SB_PAGEDOWN:
+            si.nPos += si.nPage;
+            break;
+              
+        // User dragged the scroll box.
+        case SB_THUMBTRACK:
+            si.nPos = si.nTrackPos;
+            break;
+              
+        default:
+            break; 
+        }
+
+        // Set the position and then retrieve it.  Due to adjustments
+        // by Windows it may not be the same as the value set.
+        si.fMask = SIF_POS;
+        SetScrollInfo (hwnd, SB_VERT, &si, TRUE);
+        GetScrollInfo (hwnd, SB_VERT, &si);
+
+        // If the position has changed, scroll window and update it.
+        if (si.nPos != yPos)
+        {                    
+            ScrollWindow(hwnd, 0, yChar * (yPos - si.nPos), NULL, NULL);
+            UpdateWindow (hwnd);
+        }
+
+        return 0;
