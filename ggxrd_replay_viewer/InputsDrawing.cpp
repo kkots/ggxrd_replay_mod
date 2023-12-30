@@ -1313,6 +1313,11 @@ void InputsPanel::onCopy() {
 	bool needComma = false;
 	auto it = replayFileData.replayInputs[thisPanelIndex].begin() + startRow.index;
 	auto endIt = replayFileData.replayInputs[thisPanelIndex].begin() + endRow.index + 1;
+	if (startRow.index > endRow.index) {
+		auto itTemp = it;
+		it = endIt;
+		endIt = itTemp;
+	}
 	for (; it != endIt; ++it) {
 		StoredInput& input = *it;
 		char direction = '5';
