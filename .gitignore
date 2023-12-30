@@ -361,3 +361,14 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/design.fla
+/diary.txt
+/final todo.txt
+/frame capture.fla
+/h264 input formats.txt
+/Media Foundation codecs.txt
+/scrollbars.txt
+/triangle strip.fla
+/using vertex buffers.txt
+/vertex buffer going awry.png
+/video processing.fla
