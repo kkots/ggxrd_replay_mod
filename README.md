@@ -33,7 +33,9 @@ Steps:
 7. Press Ctrl+C to show a dialog box with the inputs displayed as text that you can copy.
 8. Paste the inputs into the reversal tool. You have to go into training mode with the right characters, etc yourself, this is not automated.
 
-You cannot play the video while recording and you cannot record a video while playing it.
+You cannot play the video while recording and you cannot record a video while playing it.  
+Each file can only contain one match. The recording stops automatically when the match ends. To record the next match, you must press the button again.  
+You can record an online match you participate in, an online match you observe, an offline versus, a training session or a replay.
 
 ## Controls
 
