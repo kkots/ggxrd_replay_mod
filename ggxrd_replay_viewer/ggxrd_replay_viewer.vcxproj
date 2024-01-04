@@ -160,8 +160,6 @@
     <ClInclude Include="FileReaderThread.h" />
     <ClInclude Include="FileWriterInput.h" />
     <ClInclude Include="FileWriterThread.h" />
-    <ClInclude Include="FrameBatch.h" />
-    <ClInclude Include="FrameBatchLogic.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="gameModes.h" />
     <ClInclude Include="ggxrd_replay_viewer.h" />
@@ -176,6 +174,7 @@
     <ClInclude Include="LogicInfoAllocated.h" />
     <ClInclude Include="LogicInfoRef.h" />
     <ClInclude Include="MemoryProvisioner.h" />
+    <ClInclude Include="obfuscation.h" />
     <ClInclude Include="PixelA.h" />
     <ClInclude Include="ImageYUVScaler.h" />
     <ClInclude Include="Input.h" />
@@ -188,6 +187,7 @@
     <ClInclude Include="PresentationInput.h" />
     <ClInclude Include="PresentationThread.h" />
     <ClInclude Include="PresentationTimer.h" />
+    <ClInclude Include="remoteFunctions.h" />
     <ClInclude Include="ReplayFileData.h" />
     <ClInclude Include="ReplayFileStructs.h" />
     <ClInclude Include="ReplayInput.h" />
@@ -223,12 +223,14 @@
     <ClCompile Include="LogicInfoRef.cpp" />
     <ClCompile Include="MemoryFunctions.cpp" />
     <ClCompile Include="MemoryProvisioner.cpp" />
+    <ClCompile Include="obfuscation.cpp" />
     <ClCompile Include="PngButton.cpp" />
     <ClCompile Include="PngButtonManager.cpp" />
     <ClCompile Include="PngResource.cpp" />
     <ClCompile Include="PresentationInput.cpp" />
     <ClCompile Include="PresentationThread.cpp" />
     <ClCompile Include="PresentationTimer.cpp" />
+    <ClCompile Include="remoteFunctions.cpp" />
     <ClCompile Include="ReplayFileData.cpp" />
     <ClCompile Include="ReplayFileStructs.cpp" />
     <ClCompile Include="SampleWithBuffer.cpp" />

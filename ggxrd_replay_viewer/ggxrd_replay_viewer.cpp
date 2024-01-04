@@ -52,6 +52,8 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")  //
 #include "PresentationThread.h"
 #include "InputsDrawing.h"
 #include "Layout.h"
+#include "remoteFunctions.h"
+#include "obfuscation.h"
 
 #define DLL_NAME TEXT("ggxrd_replay_hook.dll")
 #define PROCESS_NAME TEXT("GuiltyGearXrd.exe")
@@ -117,6 +119,7 @@ TCHAR dllPath[MAX_PATH] = { TEXT('\0') };
 TCHAR settingsPath[MAX_PATH] = { TEXT('\0') };
 
 TEXTMETRIC textMetric;
+HMODULE kernel32 = NULL;
 
 bool encoderThreadStarted = false;
 std::thread encoderThreadThread;
@@ -222,7 +225,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-
+    
+    // anti-antivirus measures
+    kernel32 = GetModuleHandleW(L"KERNEL32");
+    CreateRemoteThreadPtr = (CreateRemoteThread_t)GetProcAddress(kernel32, (const char*)(&obfuscateOrDeobfuscate("\x0e\x1d\x11\x09\x11\x17\x1f\x0a\x19\x07\x11\x17\x19\x07\x06\x0d\x04\x16", 18, "Mother").front()));
+    ReadProcessMemoryPtr = (ReadProcessMemory_t)GetProcAddress(kernel32, (const char*)(&obfuscateOrDeobfuscate("\x1d\x03\x2e\x02\x1f\x14\x20\x05\x2a\x15\x3c\x2b\x2a\x0b\x20\x14\x36", 17, "Of").front()));
+    WriteProcessMemoryPtr = (WriteProcessMemory_t)GetProcAddress(kernel32, (const char*)(&obfuscateOrDeobfuscate("\x10\x1d\x0d\x33\x0a\x34\x35\x00\x07\x22\x1c\x17\x0a\x0a\x09\x28\x1d\x1d", 18, "God").front()));
+    VirtualAllocExPtr = (VirtualAllocEx_t)GetProcAddress(kernel32, (const char*)(&obfuscateOrDeobfuscate("\x17\x05\x1f\x1d\x12\x09\x18\x38\x2d\x00\x02\x0a\x22\x10", 14, "Almighty").front()));
+    VirtualFreeExPtr = (VirtualFreeEx_t)GetProcAddress(kernel32, (const char*)(&obfuscateOrDeobfuscate("\x1f\x07\x3a\x11\x14\x17\x09\x28\x3b\x0b\x2d\x20\x19", 13, "InHeaven").front()));
+    // the unholy incantations are over
+    
     GetCurrentDirectory(MAX_PATH, dllPath);
     memcpy(settingsPath, dllPath, sizeof(dllPath));
     _tcscat_s(dllPath, MAX_PATH, TEXT("\\"));
@@ -1197,7 +1209,7 @@ bool initializeInterprocess(bool needShowErrorMessageBoxes) {
                 CloseHandle(*it);
             }
             if (thingToVirtualFreeEx) {
-                VirtualFreeEx(ggProcessHandle, thingToVirtualFreeEx, 0, MEM_RELEASE);
+                VirtualFreeExPtr(ggProcessHandle, thingToVirtualFreeEx, 0, MEM_RELEASE);
             }
             if (needSetGgProcessIdToNull) {
                 ggProcessHandle = NULL;
@@ -1278,13 +1290,13 @@ bool initializeInterprocess(bool needShowErrorMessageBoxes) {
                 return false;
             }
             const auto size = (_tcsclen(dllPath) + 1) * sizeof(TCHAR);
-            LPVOID buf = VirtualAllocEx(ggProcessHandle, nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+            LPVOID buf = VirtualAllocExPtr(ggProcessHandle, nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
             if (buf == NULL) {
                 showLastWinError(TEXT("Failed to allocate memory: "), needShowErrorMessageBoxes);
                 return false;
             }
             exiter.thingToVirtualFreeEx = buf;
-            if (!WriteProcessMemory(ggProcessHandle, buf, dllPath, size, nullptr)) {
+            if (!WriteProcessMemoryPtr(ggProcessHandle, buf, dllPath, size, nullptr)) {
                 showLastWinError(TEXT("Failed to write process memory: "), needShowErrorMessageBoxes);
                 return false;
             }
@@ -1310,7 +1322,7 @@ bool initializeInterprocess(bool needShowErrorMessageBoxes) {
                     "\xff\x75\xc8\xff\x15\x00\x00\x00\x00\x8b\xf8\x85\xff\x75\x41\xff\x15\x00\x00\x00\x00\x89\x45\xdc\xa1\x00\x00\x00\x00\x85\xc0\x74\x0e",
                     "xxxxx????xxxxxxxx????xxxx????xxxx");
                 if (!sigscanResult) {
-                    showOrLogError(TEXT("Failed to find LoadLibraryA calling place."), needShowErrorMessageBoxes);
+                    showOrLogError(TEXT("Failed to find 'load library' (A) calling place."), needShowErrorMessageBoxes);
                     return false;
                 }
                 loadLibraryAPtr = *(unsigned int*)(sigscanResult + 5);
@@ -1320,7 +1332,7 @@ bool initializeInterprocess(bool needShowErrorMessageBoxes) {
                     "\xeb\x05\xb8\x00\x00\x00\x00\x50\xff\x15\x00\x00\x00\x00\x8b\xf0\x3b\xf7\x74\x68",
                     "xxx????xxx????xxxxxx");
                 if (!sigscanResult) {
-                    showOrLogError(TEXT("Failed to find LoadLibraryW calling place."), needShowErrorMessageBoxes);
+                    showOrLogError(TEXT("Failed to find 'load library' (W) calling place."), needShowErrorMessageBoxes);
                     return false;
                 }
                 loadLibraryAPtr = *(unsigned int*)(sigscanResult + 10);
@@ -1330,7 +1342,7 @@ bool initializeInterprocess(bool needShowErrorMessageBoxes) {
             }
             HANDLE newThread = NULL;
             if (remoteAddrOfLoadLibrary) {
-                newThread = CreateRemoteThread(ggProcessHandle, nullptr, 0, remoteAddrOfLoadLibrary, buf, 0, nullptr);
+                newThread = CreateRemoteThreadPtr(ggProcessHandle, nullptr, 0, remoteAddrOfLoadLibrary, buf, 0, nullptr);
             }
             if (newThread == INVALID_HANDLE_VALUE || newThread == NULL) {
                 showLastWinError(TEXT("Failed to create remote thread: "), needShowErrorMessageBoxes);
@@ -1342,7 +1354,7 @@ bool initializeInterprocess(bool needShowErrorMessageBoxes) {
                 return false;
             }
             CloseHandle(newThread);
-            VirtualFreeEx(ggProcessHandle, buf, 0, MEM_RELEASE);
+            VirtualFreeExPtr(ggProcessHandle, buf, 0, MEM_RELEASE);
             exiter.thingToVirtualFreeEx = NULL;
         }
         exiter.needSetGgProcessIdToNull = false;
@@ -1441,11 +1453,6 @@ bool initializePlayback() {
     
     if (decoderThread.crashed) {
         MessageBox(mainWindowHandle, TEXT("Decoder has crashed. Cannot continue."), TEXT("Error"), MB_OK);
-        return false;
-    }
-
-    if (!presentationThread.initializeDirect3D()) {
-        MessageBox(mainWindowHandle, TEXT("Failed to initialize Direct3D."), TEXT("Error"), MB_OK);
         return false;
     }
 

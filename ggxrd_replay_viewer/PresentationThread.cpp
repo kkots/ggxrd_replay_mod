@@ -24,6 +24,10 @@ extern std::mutex hdcMemMutex;
 void PresentationThread::threadLoop() {
     DWORD nextWaitTime = INFINITE;
 
+    if (!initializeDirect3D()) {
+        return;
+    }
+
     while (true) {
         HANDLE events[3] = { eventApplicationIsClosing, presentationInput.event, presentationTimer.eventForPresentationThread };
         DWORD waitResult = WaitForMultipleObjects(3, events, FALSE, nextWaitTime);
@@ -211,7 +215,8 @@ void PresentationThread::threadLoop() {
                 }
             }
             if (needDrawFrame) {
-                if (!updateSurface((*maxSamplesIt)->buffer)) {
+                lastDrawnFrame = *maxSamplesIt;
+                if (!updateSurface()) {
                     return;
                 }
             }
@@ -277,7 +282,6 @@ bool PresentationThread::initializeDirect3D() {
     CComPtr<IDirect3D9> d3d = Direct3DCreate9(D3D_SDK_VERSION);
     if (!d3d) return false;
 
-    D3DPRESENT_PARAMETERS d3dPresentParameters{ 0 };
     d3dPresentParameters.Windowed = TRUE;
     d3dPresentParameters.SwapEffect = D3DSWAPEFFECT_COPY;
     d3dPresentParameters.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
@@ -356,7 +360,7 @@ bool PresentationThread::resizeSurfaces() {
     return true;
 }
 
-bool PresentationThread::updateSurface(IMFMediaBuffer* buffer) {
+bool PresentationThread::updateSurface() {
     D3DLOCKED_RECT lockedRect;
     HRESULT errorCode = videoSurfaceSystemMemory->LockRect(&lockedRect, NULL, NULL);
     if (FAILED(errorCode)) {
@@ -367,9 +371,9 @@ bool PresentationThread::updateSurface(IMFMediaBuffer* buffer) {
     BYTE* bufRect = nullptr;
     DWORD bufMaxLength = 0;
     DWORD bufCurrentLength = 0;
-    errorCode = buffer->Lock(&bufRect, &bufMaxLength, &bufCurrentLength);
+    errorCode = lastDrawnFrame->buffer->Lock(&bufRect, &bufMaxLength, &bufCurrentLength);
     if (FAILED(errorCode)) {
-        debugMsg(">buffer->Lock(&bufRect, &bufMaxLength, &bufCurrentLength) failed: %.8x\n", errorCode);
+        debugMsg("lastDrawnFrame->buffer->Lock(&bufRect, &bufMaxLength, &bufCurrentLength) failed: %.8x\n", errorCode);
         return false;
     }
 
@@ -384,7 +388,7 @@ bool PresentationThread::updateSurface(IMFMediaBuffer* buffer) {
         dest = (DWORD*)((char*)dest + pitch);
     }
 
-    errorCode = buffer->Unlock();
+    errorCode = lastDrawnFrame->buffer->Unlock();
     if (FAILED(errorCode)) {
         debugMsg("buffer->Unlock() failed: %.8x\n", errorCode);
         return false;
@@ -422,92 +426,131 @@ void PresentationThread::onWmPaint(const PAINTSTRUCT& paintStruct, HDC hdc) {
 }
 
 bool PresentationThread::drawFrame(bool needDrawFrame, bool allowSleep, const RECT* videoRect, const RECT* seekbarRect, bool drawLogic, LogicInfoRef logicInfo, bool drawText) {
-    RECT videoRectLocal;
-    RECT seekbarRectLocal;
-    if (!videoRect || !seekbarRect) {
-        layout.getVideoAndSeekbar(&videoRectLocal, &seekbarRectLocal);
-        videoRect = &videoRectLocal;
-        seekbarRect = &seekbarRectLocal;
-    }
-
-    if (needDrawFrame) {
-        HRESULT errorCode = d3dDevice->BeginScene();
-        if (FAILED(errorCode)) {
-            debugMsg("d3dDevice->BeginScene failed: %.8x\n", errorCode);
-            return false;
+    bool thisIsTheSecondIteration = false;
+    while (true) {
+        RECT videoRectLocal;
+        RECT seekbarRectLocal;
+        if (!videoRect || !seekbarRect) {
+            layout.getVideoAndSeekbar(&videoRectLocal, &seekbarRectLocal);
+            videoRect = &videoRectLocal;
+            seekbarRect = &seekbarRectLocal;
         }
 
-        RECT destRect;
-        destRect.left = 0;
-        destRect.top = 0;
-        destRect.right = renderTargetDesc.Width;
-        destRect.bottom = renderTargetDesc.Height - seekbarHeight(videoRect, seekbarRect);
-        errorCode = d3dDevice->StretchRect(videoSurfaceDefaultMemory, NULL, renderTarget, NULL, D3DTEXF_LINEAR);
-        if (FAILED(errorCode)) {
-            debugMsg("d3dDevice->StretchRect (videoSurfaceDefaultMemory) failed: %.8x\n", errorCode);
-            return false;
-        }
+        if (needDrawFrame) {
+            HRESULT errorCode = d3dDevice->BeginScene();
+            if (FAILED(errorCode)) {
+                debugMsg("d3dDevice->BeginScene failed: %.8x\n", errorCode);
+                return false;
+            }
 
-        drawSeekbar(videoRect, seekbarRect);
+            RECT destRect;
+            destRect.left = 0;
+            destRect.top = 0;
+            destRect.right = renderTargetDesc.Width;
+            destRect.bottom = renderTargetDesc.Height - seekbarHeight(videoRect, seekbarRect);
+            errorCode = d3dDevice->StretchRect(videoSurfaceDefaultMemory, NULL, renderTarget, NULL, D3DTEXF_LINEAR);
+            if (FAILED(errorCode)) {
+                debugMsg("d3dDevice->StretchRect (videoSurfaceDefaultMemory) failed: %.8x\n", errorCode);
+                return false;
+            }
 
-        errorCode = d3dDevice->EndScene();
-        if (FAILED(errorCode)) {
-            debugMsg("d3dDevice->EndScene failed: %.8x\n", errorCode);
-            return false;
-        }
+            drawSeekbar(videoRect, seekbarRect);
 
-        std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+            errorCode = d3dDevice->EndScene();
+            if (FAILED(errorCode)) {
+                debugMsg("d3dDevice->EndScene failed: %.8x\n", errorCode);
+                return false;
+            }
 
-        if (allowSleep && !isFirstPresentation && currentTime - lastPresentationTime < 16ms) {
-            bool needToCancelTimePeriod = (timeBeginPeriod(3) == TIMERR_NOERROR);
-            Sleep((DWORD)(std::chrono::duration_cast<std::chrono::milliseconds>(16ms - (currentTime - lastPresentationTime))).count());
-            if (needToCancelTimePeriod) {
-                timeEndPeriod(3);
+            std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+
+            if (allowSleep && !isFirstPresentation && currentTime - lastPresentationTime < 16ms) {
+                bool needToCancelTimePeriod = (timeBeginPeriod(3) == TIMERR_NOERROR);
+                Sleep((DWORD)(std::chrono::duration_cast<std::chrono::milliseconds>(16ms - (currentTime - lastPresentationTime))).count());
+                if (needToCancelTimePeriod) {
+                    timeEndPeriod(3);
+                }
+            }
+
+            if (allowSleep) {
+                lastPresentationTime = std::chrono::steady_clock::now();
+            }
+
+            RECT totalRect;
+            totalRect.top = videoRect->top;
+            totalRect.left = videoRect->left;
+            totalRect.right = videoRect->right;
+            totalRect.bottom = seekbarRect->bottom;
+
+            errorCode = d3dDevice->Present(NULL, &totalRect, NULL, NULL);
+            if (errorCode == D3DERR_DEVICELOST) {
+                if (thisIsTheSecondIteration) {
+                    debugMsg("d3dDevice->Present returned D3DERR_DEVICELOST a second time\n");
+                    return false;
+                }
+
+                videoSurfaceSystemMemory = nullptr;
+                videoSurfaceDefaultMemory = nullptr;
+                renderTarget = nullptr;
+
+                errorCode = d3dDevice->Reset(&d3dPresentParameters);
+                if (FAILED(errorCode)) {
+                    debugMsg("d3dDevice->Reset failed: %.8x\n", errorCode);
+                    return false;
+                }
+
+                errorCode = d3dDevice->GetRenderTarget(0, &renderTarget);
+                if (FAILED(errorCode)) {
+                    debugMsg("IDirect3DDevice9->GetRenderTarget failed: %.8x\n", errorCode);
+                    return false;
+                }
+
+                errorCode = renderTarget->GetDesc(&renderTargetDesc);
+                if (FAILED(errorCode)) {
+                    debugMsg("IDirect3DSurface9->GetDesc failed: %.8x\n", errorCode);
+                    return false;
+                }
+
+                resizeSurfaces();
+
+                if (!updateSurface()) return false;
+
+                thisIsTheSecondIteration = true;
+                continue;
+            }
+            if (FAILED(errorCode)) {
+                debugMsg("d3dDevice->Present failed: %.8x\n", errorCode);
+                return false;
             }
         }
 
-        if (allowSleep) {
-            lastPresentationTime = std::chrono::steady_clock::now();
+        if (drawLogic && logicInfo.ptr) {
+            for (int i = 0; i < 2; ++i) {
+                inputsDrawing.panels[i].followToInputBufferIndexCrossthread(logicInfo->replayStates[i].index);
+            }
+            lastTextMatchCounter = logicInfo->matchCounter;
+            {
+                std::unique_lock<std::mutex> indexGuard(replayFileData.indexMutex);
+                lastTextLastMatchCounter = 0xFFFFFFFF - (unsigned int)(replayFileData.index.size() - 1);
+            }
+            textArena.clear();
+            textArena += std::to_wstring(0xFFFFFFFF - lastTextMatchCounter + 1);
+            textArena += L" / ";
+            textArena += std::to_wstring(0xFFFFFFFF - lastTextLastMatchCounter + 1);
         }
 
-        RECT totalRect;
-        totalRect.top = videoRect->top;
-        totalRect.left = videoRect->left;
-        totalRect.right = videoRect->right;
-        totalRect.bottom = seekbarRect->bottom;
-
-        errorCode = d3dDevice->Present(NULL, &totalRect, NULL, NULL);
-        if (FAILED(errorCode)) {
-            debugMsg("d3dDevice->Present failed: %.8x\n", errorCode);
-            return false;
+        if (drawText) {
+            RECT textRect;
+            layout.getAnything(&textRect, &layout.text);
+            HDC hdc = GetDC(mainWindowHandle);
+            DrawText(hdc, textArena.c_str(), (int)textArena.size(), &textRect, DT_SINGLELINE);
+            ReleaseDC(mainWindowHandle, hdc);
         }
+
+
+        return true;
     }
-
-    if (drawLogic && logicInfo.ptr) {
-        for (int i = 0; i < 2; ++i) {
-            inputsDrawing.panels[i].followToInputBufferIndexCrossthread(logicInfo->replayStates[i].index);
-        }
-        lastTextMatchCounter = logicInfo->matchCounter;
-        {
-            std::unique_lock<std::mutex> indexGuard(replayFileData.indexMutex);
-            lastTextLastMatchCounter = 0xFFFFFFFF - (unsigned int)(replayFileData.index.size() - 1);
-        }
-        textArena.clear();
-        textArena += std::to_wstring(0xFFFFFFFF - lastTextMatchCounter + 1);
-        textArena += L" / ";
-        textArena += std::to_wstring(0xFFFFFFFF - lastTextLastMatchCounter + 1);
-    }
-
-    if (drawText) {
-        RECT textRect;
-        layout.getAnything(&textRect, &layout.text);
-        HDC hdc = GetDC(mainWindowHandle);
-        DrawText(hdc, textArena.c_str(), (int)textArena.size(), &textRect, DT_SINGLELINE);
-        ReleaseDC(mainWindowHandle, hdc);
-    }
-
-
-    return true;
+    return false;
 }
 
 void PresentationThread::drawSeekbar(const RECT* videoRect, const RECT* seekbarRect) {

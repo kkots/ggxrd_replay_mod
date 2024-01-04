@@ -25,6 +25,7 @@ public:
 	HANDLE eventResponse = NULL;
 	std::atomic_bool needSwitchFiles{ false };
 private:
+	D3DPRESENT_PARAMETERS d3dPresentParameters{ 0 };
 	std::vector<SampleWithBufferRef> samples;
 	std::vector<LogicInfoRef> logics;
 	bool needReportScrubbing = false;
@@ -50,11 +51,12 @@ private:
 	unsigned int scrubbingMatchCounter = 0;
 	bool requestPendingToEraseObsoleteFrames = false;
 	bool resizeSurfaces();
-	bool updateSurface(IMFMediaBuffer* buffer);
+	bool updateSurface();
 	CComPtr<IDirect3DDevice9> d3dDevice;
 	std::wstring textArena;
 	unsigned int lastTextMatchCounter = 0xFFFFFFFF;
 	unsigned int lastTextLastMatchCounter = 0xFFFFFFFF;
+	SampleWithBufferRef lastDrawnFrame;
 	bool drawFrame(bool needDrawFrame, bool allowSleep, const RECT* videoRect, const RECT* seekbarRect, bool drawLogic, LogicInfoRef logicInfo, bool drawText);
 	unsigned char seekbarHeight(const RECT* videoRect, const RECT* seekbarRect) const;
 	void drawSeekbar(const RECT* videoRect, const RECT* seekbarRect);

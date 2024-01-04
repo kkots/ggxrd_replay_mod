@@ -29,4 +29,12 @@ private:
 	std::vector<HitboxData> hitboxDataArena;
 	bool needNotifyEof = false;
 	bool encounteredEof = false;
+	struct RecordedLogic {
+		__int64 fileOffset = 0;
+		unsigned int matchCounter = 0;
+		ReplayState replayState[2] { 0 };
+	};
+	RecordedLogic lastLogics[100] { 0 };
+	unsigned char lastLogicsCount = 0;
+	unsigned char lastLogicsIndex = 0;  // index of the current last element, inclusive
 };

@@ -1,5 +1,6 @@
 #include "MemoryFunctions.h"
 #include "WinError.h"
+#include "remoteFunctions.h"
 
 // Finds module (a loaded dll or exe itself) in the given process by name.
 // If module is not found, the returned module will have its modBaseAddr equal to 0.
@@ -65,7 +66,7 @@ MODULEENTRY32 findModule(DWORD procId, LPCTSTR name, bool is32Bit) {
 
 bool readWholeModule(HANDLE processHandle, LPCVOID modBaseAddr, DWORD modBaseSize, std::vector<char>& imageBytes) {
     imageBytes.resize(modBaseSize);
-    if (!ReadProcessMemory(processHandle, (LPCVOID)modBaseAddr, (LPVOID)&imageBytes.front(), modBaseSize, NULL)) {
+    if (!ReadProcessMemoryPtr(processHandle, (LPCVOID)modBaseAddr, (LPVOID)&imageBytes.front(), modBaseSize, NULL)) {
         WinError winErr;
         OutputDebugStringA("Failed to read module image: ");
         OutputDebugString(winErr.getMessage());

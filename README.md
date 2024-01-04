@@ -70,19 +70,14 @@ Used to load PNG icon resources. This gets included in the project and does not 
 
 Used to hook functions in the dll part of the mod. This gets included in the project and does not require installation.
 
-### DirectX SDK
+### Direct3D SDK
 
-DirectX is used in the dll part of the mod to draw inputs and hitboxes on the screen. It's also used in the app part to convert YUY2 video format into XRGB when playing the video. It's not used when recording a video, unless the Microsoft H.264 codec is doing something hardware-assisted (but I don't know how it works).  
+Direct3D is used in the dll part of the mod to draw inputs and hitboxes on the screen. It's also used in the app part to convert YUY2 video format into XRGB when playing the video. It's not used when recording a video, unless the Microsoft H.264 codec is doing something hardware-assisted (but I don't know how it works).  
 The user must have d3d9.dll on their system, and it's not shipped with the project.  
 
 ### zlib
 
 Is needed by libpng. This gets included in the project and does not require installation.
-
-### Microsoft.Windows.Common-Controls version 6.0.0.0
-
-Is needed to draw the scrollbar and the tooltips.  
-This library must be already installed on the user's system or else there may be errors. It's not shipped with the project.
 
 ### Microsoft H.264 codec
 
@@ -95,12 +90,36 @@ The idea is to build the `ggxrd_replay_viewer` as 64-bit, while the hook must be
 Go to `ggxrd_replay_viewer` project settings in the Solution Explorer and navigate to Advanced.  
 Set Character Set - Use Unicode Character Set.  
 Navigate to VC++ Directories.  
-Add following paths to Include Directories: `path_to_your_directx_9_sdk\Include;path_to_your_libpng-libpng16;$(IncludePath)`  
-Add following paths to Library Directories: `path_to_your_directx_9_sdk\Lib\x64;path_to_your_libpng-libpng16\projects\vstudio\x64\Release Library;$(LibraryPath)`  
+Add following paths to Include Directories: `path_to_your_direct3d_9_sdk\Include;path_to_your_libpng-libpng16;$(IncludePath)`  
+Add following paths to Library Directories: `path_to_your_direct3d_9_sdk\Lib\x64;path_to_your_libpng-libpng16\projects\vstudio\x64\Release Library;$(LibraryPath)`  
 Navigate to Linker - Input.  
 Add following libraries to Additional Dependencies: `libpng16.lib;zlib.lib;Rpcrt4.lib;Strmiids.lib;d3d9.lib;%(AdditionalDependencies)`  
 Rpcrt4.lib is needed for UuidCompare (I actually don't need this function anymore, but forgot to remove it).  
 Strmiids.lib is needed for IID_ICodecAPI definition. These should be in the Windows SDK installed by Visual Studio.
+
+### Building libpng
+
+You should statically link its 32-bit verion into this mod. Its sources are not included in the mod in any way, you must download and build it yourself. libpng homepage: <http://www.libpng.org/pub/png/libpng.html>  
+After you download the sources, make sure to also download the `zlib` (<https://www.zlib.net/>) sources and put the `zlib` sourcetree directory in the parent directory relative to `libpng` sourcetree and rename the `zlib` sourcetree directory to `zlib` if it's not already named that. Just to recap, the directory tree should look like this:
+
+- The directory containing both `libpng` and `zlib`:
+  - `libpng` sourcetree directory - can be named anything
+  - `zlib` sourcetree directory - must be named exactly `zlib`
+
+You don't need to compile `zlib` separately because it will get included as a subproject in `libpng` and will get compiled when you build the `libpng` solution.
+
+In the `libpng` folder go to `projects\vstudio` and open the `vstudio.sln` solution file in Visual Studio. If Visual Studio asks to Retarget Projects, agree.  
+In the top bar of Visual Studio choose build configuration `Release Library` (just `Release` seems to compile a DLL (with a `.lib` file, but that `.lib` requires the DLL actually still), while `Release Library` compiles a static `.lib` library) and `Win32`.  
+If you don't do the following step you will get a 32-bit library, while it would be much better to get a 64-bit library, if our own mod's app is going to be 64-bit. To get the 64-bit library that we actually need all you need to adjust is go into Configuration Manager (accessible via drop-down list from the top bar where it says `Win32`) and in each list item of the table in the `Platform` column select `<New...>`. In `New platform` select `x64` and choose `Copy settings from:` `Win32`. You need to do this for each row.  
+Then go to `Build` -> `Build Solution`. Everything should succeed. The build files will be written to `projects\vstudio\Release Library` (if you built a 32-bit library) or `projects\vstudio\x64\Release Library` (if you built a 64-bit library). We need the `libpng16.lib` and the `zlib.lib` files.  
+Open the `ggxrd_replay_mod` solution, right-click the `ggxrd_replay_viewer` project and select `Properties`. Navigate to `VC++ Directories` and add the full path to the `libpng` sourcetree into the `Include Directories`. Add the full path to `libpng`'s `projects\vstudio\Release Library` (`projects\vstudio\x64\Release Library`) directory into the `Library Directories` field. Navigate to `Linker` -> `Input` and add `libpng16.lib` and `zlib.lib` into the `Additional Dependencies` field.  
+This will include `libpng` and `zlib` statically (meaning it's included into whatever you've built) into the `ggxrd_replay_viewe.exe` so you don't need to ship anything extra with the `ggxrd_hitbox_overlay.dll` to get PNG functionality working.  
+The `ggxrd_replay_hook` also needs these libraries, the 32-bit versions of them, so you need to do the same for it.
+
+### Other things that need building or downloading
+
+1) Microsoft Detours - follow their official build instructions, I haven't encountered problems build them with Visual Studio.
+2) Direct3D SDK - the Microsoft DirectX SDK (June 2010) (for DirectX 9) version will suffice. Does not need building.  
 
 ## GG btns.fla
 
@@ -110,3 +129,6 @@ This is a Flash 8 Professional file. It can probably be opened by Adobe Animate,
 
 * 30'th December 2023 - fixed a crash when copying inputs that were selected up to down, instead of down to up. (released vesion 1.1)
 * 30'th December 2023 - now fixed the incorrect behavior of missing the first input when copying a section of inputs that was selected up to down. (released vesion 1.2)
+* 4'th January 2024 - fixed the issue of video display not working if you changed full screen mode in the game while the app is running.
+* 4'th January 2024 - test release to see if Chrome marks the new version as virus.
+* 
